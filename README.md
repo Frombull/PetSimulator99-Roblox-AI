@@ -1,1 +1,2 @@
-# PetSimulator99-roblox-AI
+# PetSimulator99-Roblox-AI
+click, the, ~~circles~~ coins
