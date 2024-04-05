@@ -6,6 +6,9 @@ import keyboard
 import pydirectinput
 import time
 
+PAUSE_KEY = 'p'
+QUIT_KEY = 'o'
+
 
 class PausedFlag:
     def __init__(self):
@@ -63,10 +66,10 @@ def main():
     screenshot_thread.start()
 
     # Listen for pause/resume input
-    keyboard.add_hotkey('p', pause_flag.toggle)
+    keyboard.add_hotkey(PAUSE_KEY, pause_flag.toggle)
 
     # Listen for quit input
-    keyboard.wait('o')
+    keyboard.wait(QUIT_KEY)
 
     # Set stop event to end the screenshot thread
     stop_event.set()
