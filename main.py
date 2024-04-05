@@ -27,6 +27,7 @@ def run_bot(stop_event, pause_flag, model):
             screenshot = pyautogui.screenshot()
             screenshot = Image.frombytes('RGB', screenshot.size, screenshot.tobytes())
 
+            # Run beep boop
             results = model.predict(screenshot, stream=True, stream_buffer=False, conf=0.60, verbose=False)
 
             for r in results:
@@ -67,7 +68,7 @@ def main():
     # Listen for quit input
     keyboard.wait('o')
 
-    # Set the stop event to end the screenshot thread
+    # Set stop event to end the screenshot thread
     stop_event.set()
 
     # Wait for the screenshot thread to finish
