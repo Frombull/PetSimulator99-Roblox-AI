@@ -4,8 +4,11 @@ import threading
 import pyautogui
 import keyboard
 
+INTERVAL = 1    # Seconds between screenshots
+
 
 def take_screenshot(interval, stop_event):
+    # Create folder for screenshots on project root
     if not os.path.exists("screenshots"):
         os.makedirs("screenshots")
 
@@ -14,6 +17,7 @@ def take_screenshot(interval, stop_event):
         timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
         screenshot = pyautogui.screenshot()
         screenshot.save(f"screenshots/screenshot_{timestamp}.png")
+        print(f"📸 - screenshot_{timestamp}.png")
 
         stop_event.wait(interval)
 
@@ -21,10 +25,10 @@ def take_screenshot(interval, stop_event):
 def main():
     stop_event = threading.Event()
 
-    screenshot_thread = threading.Thread(target=take_screenshot, args=(1, stop_event))
+    screenshot_thread = threading.Thread(target=take_screenshot, args=(INTERVAL, stop_event))
     screenshot_thread.start()
 
-    print("taking screenshots... Press 'o' to quit.")
+    print(f"Taking screenshots every {INTERVAL} seconds. Press 'o' to quit.")
 
     keyboard.wait("o")
 
