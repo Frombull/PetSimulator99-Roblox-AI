@@ -31,27 +31,42 @@ def run_bot(stop_event, pause_flag, model):
             screenshot = Image.frombytes('RGB', screenshot.size, screenshot.tobytes())
 
             # Run beep boop
-            results = model.predict(screenshot, stream=True, stream_buffer=False, conf=0.60, verbose=False)
+            results = model.predict(screenshot, stream=True, stream_buffer=False, conf=0.70, verbose=False)
 
             for r in results:
                 if r.boxes:
-                    box = r.boxes[0]
-                    class_id = int(box.cls)
-                    object_name = model.names[class_id]
+                    for box in r.boxes:
+                        object_name = model.names[int(box.cls)]
+                        if object_name == 'ultimate':
+                            box_pos = box.xyxy[0]
+                            center_x = (box_pos[0] + box_pos[2]) / 2
+                            center_y = (box_pos[1] + box_pos[3]) / 2
 
-                    box_pos = box.xyxy[0]
+                            click_click_click(center_x, center_y)
+                            break
+                        elif object_name == 'text_inventory':
+                            print('inventory!')
+                            break
+                    else:
+                        box = r.boxes[0]
+                        object_name = model.names[int(box.cls)]
+                        box_pos = box.xyxy[0]
 
-                    # Get box center
-                    center_x = (box_pos[0] + box_pos[2]) / 2
-                    center_y = (box_pos[1] + box_pos[3]) / 2
+                        # Get box center
+                        center_x = (box_pos[0] + box_pos[2]) / 2
+                        center_y = (box_pos[1] + box_pos[3]) / 2
 
-                    # Click click click
-                    pydirectinput.moveTo(x=int(center_x), y=int(center_y))
-                    pydirectinput.click(x=int(center_x) + 1, y=int(center_y) + 1)
-                    pydirectinput.click()
-                    pydirectinput.click()
-                    pydirectinput.click()
-                    pydirectinput.click()
+                        if object_name == 'coins':
+                            click_click_click(center_x, center_y)
+
+
+def click_click_click(center_x, center_y):
+    pydirectinput.moveTo(x=int(center_x), y=int(center_y))
+    pydirectinput.click(x=int(center_x) + 1, y=int(center_y) + 1)
+    pydirectinput.click()
+    pydirectinput.click()
+    pydirectinput.click()
+    pydirectinput.click()
 
 
 def main():
