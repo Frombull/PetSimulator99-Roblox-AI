@@ -1,6 +1,5 @@
 from ultralytics import YOLO
 import threading
-from PIL import Image
 import pyautogui
 import keyboard
 import pydirectinput
@@ -28,10 +27,9 @@ def run_bot(stop_event, pause_flag, model):
         if not pause_flag.paused:
             # Take screenshot
             screenshot = pyautogui.screenshot()
-            screenshot = Image.frombytes('RGB', screenshot.size, screenshot.tobytes())
 
             # Run beep boop
-            results = model.predict(screenshot, stream=True, stream_buffer=False, conf=0.70, verbose=False)
+            results = model.predict(screenshot, stream=True, stream_buffer=False, conf=0.70, verbose=False, show=False)
 
             for r in results:
                 if r.boxes:
@@ -45,7 +43,9 @@ def run_bot(stop_event, pause_flag, model):
                             click_click_click(center_x, center_y)
                             break
                         elif object_name == 'text_inventory':
-                            print('inventory!')
+                            print('inventory open | {time.strftime("%H:%M:%S")}')
+                            keyboard.press("f")
+                            time.sleep(1)
                             break
                     else:
                         box = r.boxes[0]
