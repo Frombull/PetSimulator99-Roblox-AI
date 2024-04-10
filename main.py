@@ -43,7 +43,7 @@ def run_bot(stop_event, pause_flag, model):
                             click_click_click(center_x, center_y)
                             break
                         elif object_name == 'text_inventory':
-                            print('inventory open | {time.strftime("%H:%M:%S")}')
+                            print(f'inventory open | {time.strftime("%H:%M:%S")}')
                             keyboard.press("f")
                             time.sleep(1)
                             break
