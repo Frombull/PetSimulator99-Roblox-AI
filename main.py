@@ -4,26 +4,37 @@ import pyautogui
 import keyboard
 import pydirectinput
 import time
+from collections import deque
 
 PAUSE_KEY = 'p'
 QUIT_KEY = 'o'
+SHOW_FPS = False
+
+
+START_TIME = time.time()
+FRAME_COUNT = 0
+FRAME_BUFFER_SIZE = 10
+frame_times = deque(maxlen=FRAME_BUFFER_SIZE)
 
 
 class PausedFlag:
     def __init__(self):
         self.paused = False
-        print(f'🤖 BEEP BOOP')
+        print(f'[{time.strftime("%H:%M:%S")}] | 🤖 BEEP BOOP')
 
     def toggle(self):
         self.paused = not self.paused
         if self.paused:
-            print(f'⏸️ Paused | {time.strftime("%H:%M:%S")}')
+            print(f'[{time.strftime("%H:%M:%S")}] | ⏸️ Paused')
         else:
-            print(f'▶️ Resumed | {time.strftime("%H:%M:%S")}')
+            print(f'[{time.strftime("%H:%M:%S")}] | ▶️ Resumed')
 
 
 def run_bot(stop_event, pause_flag, model):
+    global FRAME_COUNT
+
     while not stop_event.is_set():
+        start_frame_time = time.time()
         if not pause_flag.paused:
             # Take screenshot
             screenshot = pyautogui.screenshot()
@@ -43,7 +54,7 @@ def run_bot(stop_event, pause_flag, model):
                             click_click_click(center_x, center_y)
                             break
                         elif object_name == 'text_inventory':
-                            print(f'inventory open | {time.strftime("%H:%M:%S")}')
+                            print(f'[{time.strftime("%H:%M:%S")}] | Inventory open')
                             keyboard.press("f")
                             time.sleep(1)
                             break
@@ -58,6 +69,14 @@ def run_bot(stop_event, pause_flag, model):
 
                         if object_name == 'coins':
                             click_click_click(center_x, center_y)
+
+            FRAME_COUNT += 1
+
+            if SHOW_FPS:
+                end_frame_time = time.time()
+                frame_times.append(end_frame_time - start_frame_time)
+                avg_fps = FRAME_BUFFER_SIZE / sum(frame_times)
+                print(f'Average FPS of last {FRAME_BUFFER_SIZE} frames: {avg_fps:.2f}')
 
 
 def click_click_click(center_x, center_y):
@@ -92,8 +111,11 @@ def main():
     # Wait for the screenshot thread to finish
     screenshot_thread.join()
 
-    print(f'🛑 Stopping bot | {time.strftime("%H:%M:%S")}')
-    print(f'-' * 40)
+    print('-' * 40)
+    print(f'[{time.strftime("%H:%M:%S")}] | 🛑 Stopping bot')
+    avg_fps = FRAME_COUNT / (time.time() - START_TIME)
+    print(f'Overall Average FPS: {avg_fps:.2f}')
+    print('-' * 40)
 
 
 if __name__ == '__main__':
