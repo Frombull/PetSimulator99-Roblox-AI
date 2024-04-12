@@ -5,11 +5,12 @@ import keyboard
 import pydirectinput
 import time
 from collections import deque
+import easyocr
+import cv2 as cv
 
 PAUSE_KEY = 'p'
 QUIT_KEY = 'o'
 SHOW_FPS = False
-
 
 START_TIME = time.time()
 FRAME_COUNT = 0
@@ -88,6 +89,24 @@ def click_click_click(center_x, center_y):
     pydirectinput.click()
 
 
+def print_hello_world():
+    while True:
+        print("Hello world")
+        time.sleep(5)
+
+
+def use_item(item_name: str, num_uses: int):
+    pass
+    # parar de clicar
+    # aperto f
+    # me certifico que o inventario abriu
+    # clica na bag
+    # clica no jarro
+    # verifica se msg de erro apareceu
+    # se apareceu, espera 5 segundos e tenta dnvo
+    # se não, clica no jarro "n" vezes
+
+
 def main():
     # Load model
     model = YOLO('YOLOv8_models/best.pt')
@@ -98,6 +117,10 @@ def main():
     # Create and start the screenshot thread
     screenshot_thread = threading.Thread(target=run_bot, args=(stop_event, pause_flag, model))
     screenshot_thread.start()
+
+    # Create and start the print hello world thread
+    hello_world_thread = threading.Thread(target=print_hello_world)
+    hello_world_thread.start()
 
     # Listen for pause/resume input
     keyboard.add_hotkey(PAUSE_KEY, pause_flag.toggle)
@@ -118,5 +141,29 @@ def main():
     print('-' * 40)
 
 
+def test():
+    reader = easyocr.Reader(['en'])
+
+    # Load image
+    image = cv.imread('test_images/test_ocr.jpg')
+
+    # Convert image to grayscale
+    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+
+    # Apply thresholding to get white or close to white regions
+    _, thresholded_image = cv.threshold(gray_image, 238, 255, cv.THRESH_BINARY)
+
+    result = reader.readtext(thresholded_image)
+
+    for (bbox, text, prob) in result:
+        print(f'Text: {text}, Probability: {prob}')
+
+    # Show the result
+    cv.imshow('Filtered Image', thresholded_image)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+
 if __name__ == '__main__':
     main()
+    #test()
