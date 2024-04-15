@@ -30,6 +30,12 @@ class PausedFlag:
         else:
             print(f'[{time.strftime("%H:%M:%S")}] | ▶️ Resumed')
 
+    def pause(self):
+        self.paused = True
+
+    def resume(self):
+        self.paused = False
+
 
 def run_bot(stop_event, pause_flag, model):
     global FRAME_COUNT
@@ -89,14 +95,49 @@ def click_click_click(center_x, center_y):
     pydirectinput.click()
 
 
-def print_hello_world():
-    while True:
-        print("Hello world")
-        time.sleep(5)
+def use_item(item_name: str, model):
+    print('kkk')
+    keyboard.press("f")
+    time.sleep(1)
+
+    for i in range(2):
+        # Take screenshot
+        screenshot = pyautogui.screenshot()
+        # Run beep boop
+        results = model.predict(screenshot, stream=True, stream_buffer=False, conf=0.70, verbose=False, show=False)
+
+        for r in results:
+            if r.boxes:
+                for box in r.boxes:
+                    object_name = model.names[int(box.cls)]
+                    if object_name == "icon_meteor":
+                        print('found icon_meteor')
+                        box_pos = box.xyxy[0]
+                        center_x = (box_pos[0] + box_pos[2]) / 2
+                        center_y = (box_pos[1] + box_pos[3]) / 2
+
+                        click_click_click(center_x, center_y)
+                        time.sleep(1)
+                        keyboard.press("f")
+                        print('clicked meteor')
+                        return
+                    if object_name == 'icon_bag':
+                        print('found icon_bag')
+                        box_pos = box.xyxy[0]
+                        center_x = (box_pos[0] + box_pos[2]) / 2
+                        center_y = (box_pos[1] + box_pos[3]) / 2
+
+                        click_click_click(center_x, center_y)
+                        time.sleep(1)
+                        break
+                    else:
+                        print('found none.')
+                        return
 
 
-def use_item(item_name: str, num_uses: int):
-    pass
+
+
+
     # parar de clicar
     # aperto f
     # me certifico que o inventario abriu
@@ -105,6 +146,7 @@ def use_item(item_name: str, num_uses: int):
     # verifica se msg de erro apareceu
     # se apareceu, espera 5 segundos e tenta dnvo
     # se não, clica no jarro "n" vezes
+    # sleep por 5 minutos
 
 
 def main():
@@ -118,9 +160,10 @@ def main():
     screenshot_thread = threading.Thread(target=run_bot, args=(stop_event, pause_flag, model))
     screenshot_thread.start()
 
-    # Create and start the print hello world thread
-    hello_world_thread = threading.Thread(target=print_hello_world)
-    hello_world_thread.start()
+    # Create and start the use item thread TODO
+    #use_item_thread = threading.Thread(target=use_item)
+    #use_item_thread.start()
+    use_item(item_name='icon_jar', model=model)
 
     # Listen for pause/resume input
     keyboard.add_hotkey(PAUSE_KEY, pause_flag.toggle)
