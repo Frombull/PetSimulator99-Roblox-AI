@@ -41,49 +41,52 @@ def run_bot(stop_event, pause_flag, model):
     global FRAME_COUNT
 
     while not stop_event.is_set():
+        if pause_flag.paused:
+            time.sleep(0.1)
+            continue
+
         start_frame_time = time.time()
-        if not pause_flag.paused:
-            # Take screenshot
-            screenshot = pyautogui.screenshot()
+        # Take screenshot
+        screenshot = pyautogui.screenshot()
 
-            # Run beep boop
-            results = model.predict(screenshot, stream=True, stream_buffer=False, conf=0.70, verbose=False, show=False)
+        # Run beep boop
+        results = model.predict(screenshot, stream=True, stream_buffer=True, conf=0.70, verbose=False, show=False)
 
-            for r in results:
-                if r.boxes:
-                    for box in r.boxes:
-                        object_name = model.names[int(box.cls)]
-                        if object_name == 'ultimate':
-                            box_pos = box.xyxy[0]
-                            center_x = (box_pos[0] + box_pos[2]) / 2
-                            center_y = (box_pos[1] + box_pos[3]) / 2
-
-                            click_click_click(center_x, center_y)
-                            break
-                        elif object_name == 'text_inventory':
-                            print(f'[{time.strftime("%H:%M:%S")}] | Inventory open')
-                            keyboard.press("f")
-                            time.sleep(1)
-                            break
-                    else:
-                        box = r.boxes[0]
-                        object_name = model.names[int(box.cls)]
+        for r in results:
+            if r.boxes:
+                for box in r.boxes:
+                    object_name = model.names[int(box.cls)]
+                    if object_name == 'ultimate':
                         box_pos = box.xyxy[0]
-
-                        # Get box center
                         center_x = (box_pos[0] + box_pos[2]) / 2
                         center_y = (box_pos[1] + box_pos[3]) / 2
 
-                        if object_name == 'coins':
-                            click_click_click(center_x, center_y)
+                        click_click_click(center_x, center_y)
+                        break
+                    elif object_name == 'text_inventory':
+                        print(f'[{time.strftime("%H:%M:%S")}] | Inventory open')
+                        keyboard.press("f")
+                        time.sleep(1)
+                        break
+                else:
+                    box = r.boxes[0]
+                    object_name = model.names[int(box.cls)]
+                    box_pos = box.xyxy[0]
 
-            FRAME_COUNT += 1
+                    # Get box center
+                    center_x = (box_pos[0] + box_pos[2]) / 2
+                    center_y = (box_pos[1] + box_pos[3]) / 2
 
-            if SHOW_FPS:
-                end_frame_time = time.time()
-                frame_times.append(end_frame_time - start_frame_time)
-                avg_fps = FRAME_BUFFER_SIZE / sum(frame_times)
-                print(f'Average FPS of last {FRAME_BUFFER_SIZE} frames: {avg_fps:.2f}')
+                    if object_name == 'coins':
+                        click_click_click(center_x, center_y)
+
+        FRAME_COUNT += 1
+
+        if SHOW_FPS:
+            end_frame_time = time.time()
+            frame_times.append(end_frame_time - start_frame_time)
+            avg_fps = FRAME_BUFFER_SIZE / sum(frame_times)
+            print(f'Average FPS of last {FRAME_BUFFER_SIZE} frames: {avg_fps:.2f}')
 
 
 def click_click_click(center_x, center_y):
@@ -94,45 +97,66 @@ def click_click_click(center_x, center_y):
     pydirectinput.click()
     pydirectinput.click()
 
+def click(center_x, center_y):
+    pydirectinput.moveTo(x=int(center_x), y=int(center_y))
+    pydirectinput.click(x=int(center_x) + 1, y=int(center_y) + 1)
 
-def use_item(item_name: str, model):
+
+def use_item(item_name: str, pause_flag):
     print('kkk')
+    pause_flag.pause()
     keyboard.press("f")
+    print('a mimir 1s')
     time.sleep(1)
+    print('coidei')
+
+    local_model = YOLO('YOLOv8_models/best.pt')
 
     for i in range(2):
+        print(f'printando.. {i}')
         # Take screenshot
         screenshot = pyautogui.screenshot()
+        print('rodando modelo')
         # Run beep boop
-        results = model.predict(screenshot, stream=True, stream_buffer=False, conf=0.70, verbose=False, show=False)
+        results = local_model.predict(screenshot, conf=0.70, verbose=False, show=False)
+        print('model prediction done')
 
         for r in results:
             if r.boxes:
                 for box in r.boxes:
-                    object_name = model.names[int(box.cls)]
+                    object_name = local_model.names[int(box.cls)]
+                    print(f'object_name: {object_name}')
                     if object_name == "icon_meteor":
-                        print('found icon_meteor')
+                        print('found icon_meteor!')
                         box_pos = box.xyxy[0]
                         center_x = (box_pos[0] + box_pos[2]) / 2
                         center_y = (box_pos[1] + box_pos[3]) / 2
 
-                        click_click_click(center_x, center_y)
+                        click(center_x, center_y)
+                        print('clicked meteor')
+
                         time.sleep(1)
                         keyboard.press("f")
-                        print('clicked meteor')
+
+                        print('returning after finding meteor')
                         return
                     if object_name == 'icon_bag':
-                        print('found icon_bag')
+                        print('found icon_bag!')
                         box_pos = box.xyxy[0]
                         center_x = (box_pos[0] + box_pos[2]) / 2
                         center_y = (box_pos[1] + box_pos[3]) / 2
 
-                        click_click_click(center_x, center_y)
+                        click(center_x, center_y)
+                        print('clicked bag')
+
                         time.sleep(1)
+
+                        print('breaking after finding bag')
                         break
-                    else:
-                        print('found none.')
-                        return
+                else:
+                    print('found none!')
+    print('resuming main thread')
+    pause_flag.resume()
 
 
 
@@ -161,9 +185,8 @@ def main():
     screenshot_thread.start()
 
     # Create and start the use item thread TODO
-    #use_item_thread = threading.Thread(target=use_item)
+    use_item_thread = threading.Thread(target=use_item, args=(None, pause_flag))
     #use_item_thread.start()
-    use_item(item_name='icon_jar', model=model)
 
     # Listen for pause/resume input
     keyboard.add_hotkey(PAUSE_KEY, pause_flag.toggle)
@@ -184,27 +207,27 @@ def main():
     print('-' * 40)
 
 
-def test():
-    reader = easyocr.Reader(['en'])
-
-    # Load image
-    image = cv.imread('test_images/test_ocr.jpg')
-
-    # Convert image to grayscale
-    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-
-    # Apply thresholding to get white or close to white regions
-    _, thresholded_image = cv.threshold(gray_image, 238, 255, cv.THRESH_BINARY)
-
-    result = reader.readtext(thresholded_image)
-
-    for (bbox, text, prob) in result:
-        print(f'Text: {text}, Probability: {prob}')
-
-    # Show the result
-    cv.imshow('Filtered Image', thresholded_image)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
+# def test():
+#     reader = easyocr.Reader(['en'])
+#
+#     # Load image
+#     image = cv.imread('test_images/test_ocr.jpg')
+#
+#     # Convert image to grayscale
+#     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+#
+#     # Apply thresholding to get white or close to white regions
+#     _, thresholded_image = cv.threshold(gray_image, 238, 255, cv.THRESH_BINARY)
+#
+#     result = reader.readtext(thresholded_image)
+#
+#     for (bbox, text, prob) in result:
+#         print(f'Text: {text}, Probability: {prob}')
+#
+#     # Show the result
+#     cv.imshow('Filtered Image', thresholded_image)
+#     cv.waitKey(0)
+#     cv.destroyAllWindows()
 
 
 if __name__ == '__main__':
